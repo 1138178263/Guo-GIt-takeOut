@@ -10,7 +10,7 @@ spring:
       username: 'root'
       password: '0331'
     redis:
-      host: localhost # 本地IP 或是 虚拟机IP
+      host: 192.168.63.100 # 本地IP 或是 虚拟机IP
       port: 6379
       #    password: root
       database: 0  # 默认使用 0号db
@@ -27,3 +27,6 @@ mybatis-plus:
       id-type: ASSIGN_ID
 reggie:
   path: 'E:\大学文件\缓存区\reggieFile\'
+
+
+
