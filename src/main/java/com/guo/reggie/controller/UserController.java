@@ -7,12 +7,14 @@ import com.guo.reggie.utils.ValidateCodeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/user")
@@ -21,15 +23,16 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 根据手机短信获取验证码
      * @param user
-     * @param session
      * @return
      */
    @PostMapping("/sendMsg")
-    public R<String> sendMsg(@RequestBody User user, HttpSession session){
+    public R<String> sendMsg(@RequestBody User user){
         //获取手机号
         String phone = user.getPhone();
         //生成随机的4位验证码
@@ -39,7 +42,9 @@ public class UserController {
             //调用阿里云短信服务的API完成短信发送
             //SMSUtils.sendMessage("阿里云短信测试", "SMS_154950909", phone, code);
             //需要将生成的验证码保存到 Session
-            session.setAttribute("code", code);
+            //session.setAttribute(phone, code);    //已优化
+            //将生成的验证码缓存到Redis中，并且设置有效期为5分钟
+            redisTemplate.opsForValue().set(phone,code,5, TimeUnit.MINUTES);
             return R.success("获取验证码成功...");
         }
         return R.error("获取验证码失败...");
@@ -59,13 +64,17 @@ public class UserController {
         //获取验证码
         String code = map.get("code").toString();
         //从Session中获取保存的验证码
-        Object codeInSession = session.getAttribute("code");
+        //Object codeInSession = session.getAttribute("code"); //已优化
+        //从redis中获取缓存的验证码
+        Object codeInSession = redisTemplate.opsForValue().get(phone);
         //进行验证码的比对（页面提交的验证码和Session中保存的验证码比对）
         if(codeInSession!=null&&codeInSession.equals(code)) {
             //如果能够比对成功，说明登陆成功
             //判断当前手机号是否为新用户，如果是新用户自动完成注册
             User user = userService.insertPhone(phone);
             session.setAttribute("user",user.getId());
+            //如果用户登陆成功，删除redis中缓存的验证码
+            redisTemplate.delete(phone);
             return R.success(user);
         }
         return R.error("登录失败...");

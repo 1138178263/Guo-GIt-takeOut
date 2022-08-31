@@ -9,14 +9,14 @@ spring:
       url: 'jdbc:mysql://localhost:3306/reggie?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true'
       username: 'root'
       password: '0331'
-    redis:
-      host: 192.168.63.100 # 本地IP 或是 虚拟机IP
-      port: 6379
-      #    password: root
-      database: 0  # 默认使用 0号db
+  redis:
+    host: '192.168.63.100' # 本地IP 或是 虚拟机IP
+    port: '6379'
+    #    password: root
+    database: '0'  # 默认使用 0号db
     cache:
       redis:
-        time-to-live: 1800000  # 设置缓存数据的过期时间，30分钟
+        time-to-live: '1800000'  # 设置缓存数据的过期时间，30分钟
 mybatis-plus:
   configuration:
     #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
