@@ -1,7 +1,6 @@
 package com.guo.reggie.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.guo.reggie.common.CustomException;
 import com.guo.reggie.common.R;
 import com.guo.reggie.dto.SetmealDishDto;
 import com.guo.reggie.dto.SetmealDto;
@@ -11,6 +10,8 @@ import com.guo.reggie.pojo.SetmealDish;
 import com.guo.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class SetmealController {
      * @return
      */
     @PostMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> save(@RequestBody SetmealDto setmealDto){
         log.info("新增套餐：{}",setmealDto.getName());
         setmealService.saveWithDish(setmealDto);
@@ -57,6 +59,7 @@ public class SetmealController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> status(@PathVariable Integer status,Long[] ids){
         setmealService.status(status,ids);
         return R.success("状态修改成功");
@@ -68,6 +71,7 @@ public class SetmealController {
      * @return
      */
     @DeleteMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> delete(@RequestParam List<Long> ids){
         if(ids.isEmpty()){
             return R.success("请选择要删除的套餐");
@@ -83,6 +87,7 @@ public class SetmealController {
      * @return
      */
     @GetMapping("/list")
+    @Cacheable(value = "setmealCache",key="#categoryId+'_'+#status")
     public R<List<Setmeal>> list(Long categoryId,Integer status){
         List<Setmeal> list = setmealService.list(categoryId, status);
         return R.success(list);
